@@ -1,40 +1,32 @@
-﻿using Microsoft.EntityFrameworkCore;
-using SameApi.Data.Repository;
+﻿using SameApi.Data.Repository;
 using SameApi.Db.DbContexts;
 using SameApi.Model;
 
 namespace SameApi.Db.Repository.Implementation
 {
-    public class UserRepository : BaseRepository<IApiSameDbContext, UserDao>, IUserRepository
+    public class UserRepository(IApiSameDbContext context)
+        : BaseRepository<IApiSameDbContext, UserDao>(context), IUserRepository
     {
-        public UserRepository(IApiSameDbContext context) : base(context)
-        { }
-        public override async Task<IEnumerable<UserDao>> GetAllAsync(bool withNoTracking = true)
+        protected override string CollectionName => "users";
+
+        public async Task CreateAsync(UserDao user)
         {
-            IQueryable<UserDao> query = _context.Set<UserDao>();
+            var document = Collection.Document();
 
-            if (withNoTracking)
-            {
-                query = query.AsNoTracking();
-            }
+            user.Id = document.Id;
 
-            return await query.Include(user => user.GenderDao)
-                              .Include(user => user.SchoolDao).ThenInclude(user => user.Professions) 
-                              .Include(user => user.ProfessionDao)
-                              .ToListAsync();
+            await document.CreateAsync(user);
         }
 
-        public override async Task<UserDao?> GetByIdAsync(int id, bool withNoTracking = true)
+        public async Task<bool> EmailExistsAsync(string? email)
         {
-            IQueryable<UserDao> query = _context.Set<UserDao>();
+            var snap = await Collection.WhereEqualTo("email", email).Limit(1).GetSnapshotAsync();
+            return snap.Count > 0;
+        }
 
-            if (withNoTracking)
-                query = query.AsNoTracking();
-
-            return await query.Include(user => user.GenderDao)
-                              .Include(user => user.SchoolDao).ThenInclude(user => user.Professions)
-                              .Include(user => user.ProfessionDao)
-                                .FirstOrDefaultAsync(x => x.Id == id);
+        public Task UpdateFieldsAsync(string id, Dictionary<string, object> updates)
+        {
+            return Collection.Document(id).UpdateAsync(updates);
         }
     }
 }

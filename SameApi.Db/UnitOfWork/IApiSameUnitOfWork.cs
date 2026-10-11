@@ -7,12 +7,7 @@ namespace SameApi.Db.UnitOfWork
     {
         IApiSameDbContext Context { get; }
         IUserRepository UserRepository { get; }
-        IGenderRepository GenderRepository { get; }
-        IProfessionRepository ProfessionRepository { get; }
-        ISchoolRepository SchoolRepository { get; }
-        IPostRepository PostRepository { get; }
-        ICommentRepository CommentRepository{ get; }
-        Task<int> SaveChangesAsync();
+        //Task<int> SaveChangesAsync();
         
     }
 }

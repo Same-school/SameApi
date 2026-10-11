@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
+using Google.Cloud.Firestore;
 using MediatR;
-using Microsoft.AspNetCore.Identity;
 using SameApi.Db.UnitOfWork;
 using SameApi.Dto;
 using SameApi.Model;
@@ -14,49 +14,34 @@ namespace SameApi.Business.User.Command
     {
         private readonly IApiSameUnitOfWork _uow;
         private readonly IMapper _mapper;
-        private readonly PasswordHasher<UserDao> _passwordHasher;
+
         public CreateUserCommandHandler(
-            IApiSameUnitOfWork unitOfWork, 
+            IApiSameUnitOfWork unitOfWork,
             IMapper mapper)
         {
             _uow = unitOfWork;
             _mapper = mapper;
-            _passwordHasher = new PasswordHasher<UserDao>();
         }
+
         public async Task Handle(CreateUserCommand request, CancellationToken cancellationToken)
         {
-            var dao = _mapper.Map<UserDao>(request);
+            if (await _uow.UserRepository.EmailExistsAsync(request.Email))
+                throw new InvalidOperationException(
+                    "Un utilisateur avec cet e-mail existe déjà.");
 
-            var genderEntity = await _uow.GenderRepository.GetByIdAsync(request.GenderId.Value, withNoTracking: false);
-            var schoolEntity = await _uow.SchoolRepository.GetByIdAsync(request.SchoolId.Value, withNoTracking: false);
-            var professionEntity = await _uow.ProfessionRepository.GetByIdAsync(request.ProfessionId.Value, withNoTracking: false);
+            var now = Timestamp.GetCurrentTimestamp();
 
-            if (genderEntity != null)
-            {
-                dao.GenderDao = genderEntity;
-            }
+            UserDao user = _mapper.Map<UserDao>(request);
 
-            if (schoolEntity != null)
-            {
-                dao.SchoolDao = schoolEntity;
-            }
+            if (request.Email != null )
+                user.Username = request.Email.Split('@')[0];
 
-            if (professionEntity != null)
-            {
-                dao.ProfessionDao = professionEntity;
-            }
+            user.BirthDate = request.BirthDate?.ToString("yyyy-MM-dd");
 
-            if (dao.Birthdate.HasValue)
-            {
-                var today = DateTime.Today;
-                var age = today.Year - dao.Birthdate.Value.Year;
-                if (dao.Birthdate.Value.Date > today.AddYears(-age)) age--;
-                dao.Age = age;
-            }
-               dao.Password = _passwordHasher.HashPassword(dao, request.Password);
-           
-                
-            await _uow.UserRepository.AddAndSaveAsync(dao);
+            user.CreatedAt = now;
+            user.UpdatedAt = now;
+
+            await _uow.UserRepository.CreateAsync(user);
         }
     }
 }

@@ -10,4 +10,8 @@
     <ProjectReference Include="..\SameApi.Data\SameApi.Data.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="LKP\" />
+  </ItemGroup>
+
 </Project>

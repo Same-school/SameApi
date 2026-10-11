@@ -1,33 +1,72 @@
-﻿using SameApi.Data.Model;
-using SameApi.Model.LKP;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using Google.Cloud.Firestore;
+using SameApi.Data.Model;
 
 namespace SameApi.Model
 {
-    [Table("SameApi_User")]
+    [FirestoreData]
     public class UserDao : IModelDao
     {
-        [Key]
-        public int Id { get; set; }
-        public bool IsActive { get; set; }
-        public int Age { get ; set; }
-        public DateTime? Birthdate { get; set; }
-        public required string Pseudo { get; set; }
-        public required string? FirstName { get; set; }
-        public required string? LastName { get; set; }
-        public required string Email { get; set; }
-        public required string Password { get; set; }
-        public int NumberFollowers { get; set; }
-        public DateTime CreateAt { get; set; }
+        [FirestoreDocumentId]
+        public string Id { get; set; } = "";
 
-        public int? GenderDaoId { get; set; }
-        public LKP_GenderDao? GenderDao { get; set; }
+        [FirestoreProperty("username")]
+        public string Username { get; set; } = "";
 
-        public int? SchoolDaoId { get; set; }
-        public LKP_SchoolDao? SchoolDao { get; set; }
+        [FirestoreProperty("email")]
+        public string Email { get; set; } = "";
 
-        public int? ProfessionDaoId { get; set; }
-        public LKP_ProfessionDao? ProfessionDao { get; set; }
+        [FirestoreProperty("bio")]
+        public string? Bio { get; set; }
+
+        [FirestoreProperty("birthDate")]
+        public string? BirthDate { get; set; }       
+
+        [FirestoreProperty("profilePictureUrl")]
+        public string? ProfilePictureUrl { get; set; }
+
+        [FirestoreProperty("coverPictureUrl")]
+        public string? CoverPictureUrl { get; set; }
+
+        [FirestoreProperty("phoneNumber")]
+        public string? PhoneNumber { get; set; }
+
+        [FirestoreProperty("website")]
+        public string? Website { get; set; }
+
+        [FirestoreProperty("isAdmin")]
+        public bool IsAdmin { get; set; }
+
+        [FirestoreProperty("isVerified")]
+        public bool IsVerified { get; set; }
+
+        [FirestoreProperty("isPrivate")]
+        public bool IsPrivate { get; set; }
+
+        [FirestoreProperty("status")]
+        public string Status { get; set; } = "active";
+
+        [FirestoreProperty("followersCount")]
+        public int FollowersCount { get; set; }
+
+        [FirestoreProperty("followingCount")]
+        public int FollowingCount { get; set; }
+
+        [FirestoreProperty("postsCount")]
+        public int PostsCount { get; set; }
+
+        [FirestoreProperty("createdAt")]
+        public Timestamp CreatedAt { get; set; }
+
+        [FirestoreProperty("updatedAt")]
+        public Timestamp UpdatedAt { get; set; }
+
+        [FirestoreProperty("lastLoginAt")]
+        public Timestamp? LastLoginAt { get; set; }
+
+        [FirestoreProperty("genderId")]
+        public string? GenderId { get; set; }
+
+        [FirestoreProperty("schoolId")]
+        public string? SchoolId { get; set; }
     }
 }

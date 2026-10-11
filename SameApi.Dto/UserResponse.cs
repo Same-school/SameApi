@@ -2,14 +2,19 @@
 {
     public class UserResponse
     {
-        public int Id { get; set; }
-        public bool IsAdmin { get; set; }
-        public int Age { get; set; }
-        public required string Pseudo { get; set; }
-        public required string Email { get; set; }
-        public int NumberFollowers { get; set; }
-        public DateTime CreateAt { get; set; }
-        public GenderResponse? Gender { get; set; }
-        public SchoolResponse? School { get; set; }
+        public string Id { get; set; } = "";
+        public string Username { get; set; } = "";
+        public string? Bio { get; set; }
+        public string? ProfilePictureUrl { get; set; }
+        public string? CoverPictureUrl { get; set; }
+        public string? Website { get; set; }
+        public bool IsVerified { get; set; }
+        public bool IsPrivate { get; set; }
+        public int FollowersCount { get; set; }
+        public int FollowingCount { get; set; }
+        public int PostsCount { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public string? GenderId { get; set; }
+        public string? SchoolId { get; set; }
     }
 }

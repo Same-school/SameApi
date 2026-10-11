@@ -7,7 +7,7 @@ namespace SameApi.Business.User.Query
 {
     public class GetUserByIdQuery : IRequest<UserResponse>
     {
-        public int Id { get; set; }
+        public required string Id { get; set; }
     }
 
     public class GetUserByIdQueryHandler : IRequestHandler<GetUserByIdQuery, UserResponse?>

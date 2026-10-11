@@ -1,40 +1,51 @@
-﻿using AutoMapper;
+﻿using System.Reflection;
+using Google.Cloud.Firestore;
 using MediatR;
 using SameApi.Db.UnitOfWork;
 using SameApi.Dto;
-using SameApi.Model;
 
 namespace SameApi.Business.User.Command
 {
-    public class UpdateUserCommand : UserInput, IRequest<int?>
+    public class UpdateUserCommand : UserInput, IRequest
     {
-        public int Id { get; set; }
+        public string Id { get; set; } = "";
     }
-    public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, int?>
-    {
-        readonly IApiSameUnitOfWork _apiSameUnitOfWork;
-        readonly IMapper _mapper;
 
-        public UpdateUserCommandHandler(
-            IApiSameUnitOfWork apiSameUnitOfWork,
-            IMapper mapper)
+    public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand>
+    {
+        private readonly IApiSameUnitOfWork _uow;
+
+        public UpdateUserCommandHandler(IApiSameUnitOfWork unitOfWork)
         {
-            _apiSameUnitOfWork = apiSameUnitOfWork;
-            _mapper = mapper;
+            _uow = unitOfWork;
         }
 
-        public async Task<int?> Handle(UpdateUserCommand request, CancellationToken cancellationToken)
+        public async Task Handle(UpdateUserCommand request, CancellationToken cancellationToken)
         {
-            var data = await _apiSameUnitOfWork.UserRepository.GetByIdAsync(request.Id, false);
+            if (string.IsNullOrWhiteSpace(request.Id))
+                throw new ArgumentException("L'ID utilisateur est obligatoire.");
 
-            if (data == null)
-                return null;
+            var existingUser = await _uow.UserRepository.GetByIdAsync(request.Id) ?? throw new InvalidOperationException("USER_NOT_FOUND: User not found.");
 
-            _mapper.Map<UserInput, UserDao>(request, data);
+            var updates = GetUpdatedFields(request);
 
-            await _apiSameUnitOfWork.UserRepository.UpdateAsync(data);
+            updates["updatedAt"] = Timestamp.GetCurrentTimestamp();
 
-            return data.Id;
+            await _uow.UserRepository.UpdateFieldsAsync(request.Id, updates);
+        }
+
+        public static Dictionary<string, object> GetUpdatedFields<T>(T model)
+        {
+            return typeof(T)
+                .GetProperties()
+                .Where(p => p.GetValue(model) != null)
+                .Select(p => new {Property = p, Value = p.GetValue(model)})
+                .Where(x => x.Property.Name != "Id")
+                .ToDictionary(
+                    x => x.Property.GetCustomAttribute<FirestorePropertyAttribute>()?.Name
+                         ?? char.ToLowerInvariant(x.Property.Name[0]) + x.Property.Name[1..],
+                    x => x.Value!
+                );
         }
     }
 }
