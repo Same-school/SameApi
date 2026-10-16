@@ -19,22 +19,47 @@ namespace SameApi.App.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(string id)
+        public async Task<IActionResult> GetById(string id, CancellationToken ct)
         {
-            var user = await _mediator.Send(new GetUserByIdQuery{Id = id});
+            try
+            {
+                var user = await _mediator.Send(new GetUserByIdQuery { Id = id}, ct);
+                return user is null ? NotFound() : Ok(user);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
+            }
+        }
+
+        [HttpGet("me")]
+        public async Task<IActionResult> GetMe()
+        {
+            var uid = User.FindFirst("user_id")?.Value;
+            if (uid is null) return Unauthorized();
+
+            var user = await _mediator.Send(new GetUserByIdQuery { Id = uid });
             return user is null ? NotFound() : Ok(user);
         }
 
         [HttpPost("use-profile")]
-        public async Task<IActionResult> CreateUserAsync([FromBody] CreateUserCommand command)
+        public async Task<IActionResult> CreateUserAsync([FromBody] CreateUserCommand command, CancellationToken ct)
         {
-            await _mediator.Send(command);
+            var uid = User.FindFirst("user_id")?.Value;
+            if (uid is null) return Unauthorized();
+
+            command.Uid = uid;
+            await _mediator.Send(command, ct);
             return Ok();
         }
-        [HttpPatch("{id}")]
-        public async Task<IActionResult> UpdateUserAsync(string id,  [FromBody] UpdateUserCommand command)
+
+        [HttpPatch]
+        public async Task<IActionResult> UpdateUserAsync( [FromBody] UpdateUserCommand command)
         {
-            command.Id = id;
+            var uid = User.FindFirst("user_id")?.Value;
+            if (uid is null) return Unauthorized();
+
+            command.Id = uid;
             await _mediator.Send(command);
             return Ok();
         }

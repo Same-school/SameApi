@@ -30,6 +30,9 @@ namespace SameApi.Business.User.Query
             if (data == null)
                 return null;
 
+            if (data.IsPrivate == true)
+                throw new UnauthorizedAccessException("Ce compte est privé.");
+
             var result = _mapper.Map<UserResponse>(data);
             return result;
         }

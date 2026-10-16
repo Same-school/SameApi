@@ -4,11 +4,14 @@ using MediatR;
 using SameApi.Db.UnitOfWork;
 using SameApi.Dto;
 using SameApi.Model;
+using System.Text.Json.Serialization;
 
 namespace SameApi.Business.User.Command
 {
     public class CreateUserCommand : UserInput, IRequest
     {
+        [JsonIgnore]
+        public string? Uid { get; set; } = default!;
     }
     public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand>
     {
@@ -35,9 +38,7 @@ namespace SameApi.Business.User.Command
 
             if (request.Email != null )
                 user.Username = request.Email.Split('@')[0];
-
-            user.BirthDate = request.BirthDate?.ToString("yyyy-MM-dd");
-
+            user.Id = request.Uid!;
             user.CreatedAt = now;
             user.UpdatedAt = now;
 

@@ -4,10 +4,11 @@
     {
         public string Id { get; set; } = "";
         public string Username { get; set; } = "";
+        public string? FirstName { get; set; }
+        public string? LastName { get; set; }
         public string? Bio { get; set; }
         public string? ProfilePictureUrl { get; set; }
         public string? CoverPictureUrl { get; set; }
-        public string? Website { get; set; }
         public bool IsVerified { get; set; }
         public bool IsPrivate { get; set; }
         public int FollowersCount { get; set; }
