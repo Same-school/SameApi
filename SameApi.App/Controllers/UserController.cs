@@ -21,9 +21,11 @@ namespace SameApi.App.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(string id, CancellationToken ct)
         {
+            var requesterId = User.FindFirst("user_id")?.Value;
+
             try
             {
-                var user = await _mediator.Send(new GetUserByIdQuery { Id = id}, ct);
+                var user = await _mediator.Send(new GetUserByIdQuery { Id = id, RequesterId = requesterId }, ct);
                 return user is null ? NotFound() : Ok(user);
             }
             catch (UnauthorizedAccessException ex)
@@ -33,16 +35,16 @@ namespace SameApi.App.Controllers
         }
 
         [HttpGet("me")]
-        public async Task<IActionResult> GetMe()
+        public async Task<IActionResult> GetMe(CancellationToken ct)
         {
             var uid = User.FindFirst("user_id")?.Value;
             if (uid is null) return Unauthorized();
 
-            var user = await _mediator.Send(new GetUserByIdQuery { Id = uid });
+            var user = await _mediator.Send(new GetUserByIdQuery { Id = uid, RequesterId = uid }, ct);
             return user is null ? NotFound() : Ok(user);
         }
 
-        [HttpPost("use-profile")]
+        [HttpPost("create")]
         public async Task<IActionResult> CreateUserAsync([FromBody] CreateUserCommand command, CancellationToken ct)
         {
             var uid = User.FindFirst("user_id")?.Value;
@@ -53,14 +55,25 @@ namespace SameApi.App.Controllers
             return Ok();
         }
 
-        [HttpPatch]
-        public async Task<IActionResult> UpdateUserAsync( [FromBody] UpdateUserCommand command)
+        [HttpPatch("update")]
+        public async Task<IActionResult> UpdateUserAsync([FromBody] UpdateUserCommand command)
         {
             var uid = User.FindFirst("user_id")?.Value;
             if (uid is null) return Unauthorized();
 
             command.Id = uid;
             await _mediator.Send(command);
+            return Ok();
+        }
+
+        [HttpPatch("follow")]
+        public async Task<IActionResult> FollowAsync([FromBody] FollowUserCommand command, CancellationToken ct)
+        {
+            var uid = User.FindFirst("user_id")?.Value;
+            if (uid is null) return Unauthorized();
+
+            command.CurrentUserId = uid;
+            await _mediator.Send(command, ct);
             return Ok();
         }
 

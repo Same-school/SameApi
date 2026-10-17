@@ -1,4 +1,5 @@
-﻿using SameApi.Data.Repository;
+﻿using Google.Cloud.Firestore;
+using SameApi.Data.Repository;
 using SameApi.Db.DbContexts;
 using SameApi.Model;
 
@@ -25,6 +26,39 @@ namespace SameApi.Db.Repository.Implementation
         {
             var document = Collection.Document(id);
             await document.UpdateAsync(updates);
+        }
+
+        public async Task FollowAsync(string followerId, string followedId)
+        {
+            var db = Collection.Database;
+            var followRef = db.Collection("follows").Document($"{followerId}_{followedId}");
+            var followerRef = Collection.Document(followerId);
+            var followedRef = Collection.Document(followedId);
+            var now = Timestamp.GetCurrentTimestamp();
+
+            await db.RunTransactionAsync(async tx =>
+            {
+                var snap = await tx.GetSnapshotAsync(followRef);
+                if (snap.Exists)
+                    throw new InvalidOperationException("ALREADY_FOLLOWING: Déjà suivi.");
+
+                tx.Create(followRef, new Dictionary<string, object>
+                {
+                    ["followerId"] = followerId,
+                    ["followedId"] = followedId,
+                    ["createdAt"] = now
+                });
+                tx.Update(followerRef, new Dictionary<string, object>
+                {
+                    ["followingCount"] = FieldValue.Increment(1),
+                    ["updatedAt"] = now
+                });
+                tx.Update(followedRef, new Dictionary<string, object>
+                {
+                    ["followersCount"] = FieldValue.Increment(1),
+                    ["updatedAt"] = now
+                });
+            });
         }
     }
 }
