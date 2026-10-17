@@ -19,23 +19,72 @@ namespace SameApi.App.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(string id)
+        public async Task<IActionResult> GetById(string id, CancellationToken ct)
         {
-            var user = await _mediator.Send(new GetUserByIdQuery{Id = id});
+            var requesterId = User.FindFirst("user_id")?.Value;
+
+            try
+            {
+                var user = await _mediator.Send(new GetUserByIdQuery { Id = id, RequesterId = requesterId }, ct);
+                return user is null ? NotFound() : Ok(user);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
+            }
+        }
+
+        [HttpGet("me")]
+        public async Task<IActionResult> GetMe(CancellationToken ct)
+        {
+            var uid = User.FindFirst("user_id")?.Value;
+            if (uid is null) return Unauthorized();
+
+            var user = await _mediator.Send(new GetUserByIdQuery { Id = uid, RequesterId = uid }, ct);
             return user is null ? NotFound() : Ok(user);
         }
 
-        [HttpPost("use-profile")]
-        public async Task<IActionResult> CreateUserAsync([FromBody] CreateUserCommand command)
+        [HttpPost("create")]
+        public async Task<IActionResult> CreateUserAsync([FromBody] CreateUserCommand command, CancellationToken ct)
         {
+            var uid = User.FindFirst("user_id")?.Value;
+            if (uid is null) return Unauthorized();
+
+            command.Uid = uid;
+            await _mediator.Send(command, ct);
+            return Ok();
+        }
+
+        [HttpPatch("update")]
+        public async Task<IActionResult> UpdateUserAsync([FromBody] UpdateUserCommand command)
+        {
+            var uid = User.FindFirst("user_id")?.Value;
+            if (uid is null) return Unauthorized();
+
+            command.Id = uid;
             await _mediator.Send(command);
             return Ok();
         }
-        [HttpPatch("{id}")]
-        public async Task<IActionResult> UpdateUserAsync(string id,  [FromBody] UpdateUserCommand command)
+
+        [HttpPatch("follow")]
+        public async Task<IActionResult> FollowAsync([FromBody] FollowUserCommand command, CancellationToken ct)
         {
-            command.Id = id;
-            await _mediator.Send(command);
+            var uid = User.FindFirst("user_id")?.Value;
+            if (uid is null) return Unauthorized();
+
+            command.CurrentUserId = uid;
+            await _mediator.Send(command, ct);
+            return Ok();
+        }
+
+        [HttpPatch("unfollow")]
+        public async Task<IActionResult> UnFollowAsync([FromBody] UnfollowUserCommand command, CancellationToken ct)
+        {
+            var uid = User.FindFirst("user_id")?.Value;
+            if (uid is null) return Unauthorized();
+
+            command.CurrentUserId = uid;
+            await _mediator.Send(command, ct);
             return Ok();
         }
 

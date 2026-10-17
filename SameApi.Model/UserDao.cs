@@ -12,6 +12,12 @@ namespace SameApi.Model
         [FirestoreProperty("username")]
         public string Username { get; set; } = "";
 
+        [FirestoreProperty("firstName")]
+        public string FirstName { get; set; } = "";
+
+        [FirestoreProperty("lastName")]
+        public string LastName { get; set; } = "";
+
         [FirestoreProperty("email")]
         public string Email { get; set; } = "";
 
@@ -27,12 +33,6 @@ namespace SameApi.Model
         [FirestoreProperty("coverPictureUrl")]
         public string? CoverPictureUrl { get; set; }
 
-        [FirestoreProperty("phoneNumber")]
-        public string? PhoneNumber { get; set; }
-
-        [FirestoreProperty("website")]
-        public string? Website { get; set; }
-
         [FirestoreProperty("isAdmin")]
         public bool IsAdmin { get; set; }
 
@@ -41,9 +41,6 @@ namespace SameApi.Model
 
         [FirestoreProperty("isPrivate")]
         public bool IsPrivate { get; set; }
-
-        [FirestoreProperty("status")]
-        public string Status { get; set; } = "active";
 
         [FirestoreProperty("followersCount")]
         public int FollowersCount { get; set; }

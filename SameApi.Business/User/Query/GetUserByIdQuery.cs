@@ -7,7 +7,9 @@ namespace SameApi.Business.User.Query
 {
     public class GetUserByIdQuery : IRequest<UserResponse>
     {
-        public required string Id { get; set; }
+        public string Id { get; set; } = default!;
+        public string? RequesterId { get; set; }
+
     }
 
     public class GetUserByIdQueryHandler : IRequestHandler<GetUserByIdQuery, UserResponse?>
@@ -29,6 +31,9 @@ namespace SameApi.Business.User.Query
 
             if (data == null)
                 return null;
+
+            if (data.IsPrivate == true && data.Id != request.RequesterId)
+                throw new UnauthorizedAccessException("Ce compte est privé.");
 
             var result = _mapper.Map<UserResponse>(data);
             return result;

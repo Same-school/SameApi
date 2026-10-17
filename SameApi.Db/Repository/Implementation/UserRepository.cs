@@ -1,4 +1,5 @@
-﻿using SameApi.Data.Repository;
+﻿using Google.Cloud.Firestore;
+using SameApi.Data.Repository;
 using SameApi.Db.DbContexts;
 using SameApi.Model;
 
@@ -11,10 +12,7 @@ namespace SameApi.Db.Repository.Implementation
 
         public async Task CreateAsync(UserDao user)
         {
-            var document = Collection.Document();
-
-            user.Id = document.Id;
-
+            var document = Collection.Document(user.Id);
             await document.CreateAsync(user);
         }
 
@@ -24,9 +22,74 @@ namespace SameApi.Db.Repository.Implementation
             return snap.Count > 0;
         }
 
-        public Task UpdateFieldsAsync(string id, Dictionary<string, object> updates)
+        public async Task UpdateFieldsAsync(string id, Dictionary<string, object> updates)
         {
-            return Collection.Document(id).UpdateAsync(updates);
+            var document = Collection.Document(id);
+            await document.UpdateAsync(updates);
+        }
+
+        public async Task FollowAsync(string followerId, string followedId)
+        {
+            var db = Collection.Database;
+            var followRef = db.Collection("follows").Document($"{followerId}_{followedId}");
+            var followerRef = Collection.Document(followerId);
+            var followedRef = Collection.Document(followedId);
+            var now = Timestamp.GetCurrentTimestamp();
+
+            await db.RunTransactionAsync(async tx =>
+            {
+                var snap = await tx.GetSnapshotAsync(followRef);
+                if (snap.Exists)
+                    throw new InvalidOperationException("ALREADY_FOLLOWING: already followed.");
+
+                tx.Create(followRef, new Dictionary<string, object>
+                {
+                    ["followerId"] = followerId,
+                    ["followedId"] = followedId,
+                    ["createdAt"] = now
+                });
+                tx.Update(followerRef, new Dictionary<string, object>
+                {
+                    ["followingCount"] = FieldValue.Increment(1),
+                    ["updatedAt"] = now
+                });
+                tx.Update(followedRef, new Dictionary<string, object>
+                {
+                    ["followersCount"] = FieldValue.Increment(1),
+                    ["updatedAt"] = now
+                });
+            });
+        }
+
+        public async Task UnfollowAsync(string followerId, string followedId)
+        {
+            var db = Collection.Database;
+            var followRef = db.Collection("follows").Document($"{followerId}_{followedId}");
+            var followerRef = Collection.Document(followerId);
+            var followedRef = Collection.Document(followedId);
+            var now = Timestamp.GetCurrentTimestamp();
+
+            await db.RunTransactionAsync(async tx =>
+            {
+                var snap = await tx.GetSnapshotAsync(followRef);
+                if (snap.Exists)
+                {
+                    tx.Delete(followRef);
+
+                    tx.Update(followerRef, new Dictionary<string, object>
+                    {
+                        ["followingCount"] = FieldValue.Increment(-1),
+                        ["updatedAt"] = now
+                    });
+                    tx.Update(followedRef, new Dictionary<string, object>
+                    {
+                        ["followersCount"] = FieldValue.Increment(-1),
+                        ["updatedAt"] = now
+                    });
+                }
+                else
+                    throw new InvalidOperationException("ALREADY_FOLLOWING: no follow find.");
+            });
         }
     }
 }
