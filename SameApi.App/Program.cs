@@ -1,4 +1,5 @@
 using FluentValidation;
+using Google.Cloud.Firestore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
@@ -43,7 +44,6 @@ builder.Services.AddSwaggerGen(c =>
 
 builder.Services.RegisterFireStore(projectId, DatabaseId);
 builder.Services.RegisterSameApiDbContainer();
-
 builder.Services.AddAutoMapper(cfg => { }, typeof(SameApiProfile).Assembly);
 builder.Services.AddValidatorsFromAssemblyContaining<CreateUserCommand>(); 
 builder.Services.AddMediatR(cfg =>
@@ -68,6 +68,12 @@ builder.Services
 builder.Services.AddAuthorization();
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<FirestoreDb>();
+    await DbRegisterExtension.SeedGendersAsync(db);
+    await DbRegisterExtension.SeedSchoolsAsync(db);
+}
 
 if (app.Environment.IsDevelopment())
 {
