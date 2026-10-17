@@ -21,7 +21,7 @@ namespace SameApi.Business.User.Command
         public async Task Handle(FollowUserCommand request, CancellationToken cancellationToken)
         {
             if (request.CurrentUserId == request.FollowUserId)
-                throw new InvalidOperationException("INVALID_FOLLOW: Impossible de se suivre soi-même.");
+                throw new InvalidOperationException("INVALID_FOLLOW: Impossible to follow himself.");
 
             _ = await _uow.UserRepository.GetByIdAsync(request.CurrentUserId)
                 ?? throw new InvalidOperationException("USER_NOT_FOUND: Actual User not found.");

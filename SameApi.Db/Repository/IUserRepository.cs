@@ -9,6 +9,7 @@ namespace SameApi.Db.Repository
         Task CreateAsync(UserDao user);                 // utilise user.Id (UID Firebase) comme ID du document
         Task<bool> EmailExistsAsync(string? username);
         Task UpdateFieldsAsync(string id, Dictionary<string, object> updates);
-        Task FollowAsync(string followerId, string followedId);
+        Task FollowAsync(string followerId, string followedId); 
+        Task UnfollowAsync(string followerId, string followedId);
     }
 }

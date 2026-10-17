@@ -77,6 +77,17 @@ namespace SameApi.App.Controllers
             return Ok();
         }
 
+        [HttpPatch("unfollow")]
+        public async Task<IActionResult> UnFollowAsync([FromBody] UnfollowUserCommand command, CancellationToken ct)
+        {
+            var uid = User.FindFirst("user_id")?.Value;
+            if (uid is null) return Unauthorized();
+
+            command.CurrentUserId = uid;
+            await _mediator.Send(command, ct);
+            return Ok();
+        }
+
         [HttpDelete("delete/{id}")]
         public async Task<IActionResult> DeleteUserAsync(string id)
         {

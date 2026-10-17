@@ -40,7 +40,7 @@ namespace SameApi.Db.Repository.Implementation
             {
                 var snap = await tx.GetSnapshotAsync(followRef);
                 if (snap.Exists)
-                    throw new InvalidOperationException("ALREADY_FOLLOWING: Déjà suivi.");
+                    throw new InvalidOperationException("ALREADY_FOLLOWING: already followed.");
 
                 tx.Create(followRef, new Dictionary<string, object>
                 {
@@ -58,6 +58,37 @@ namespace SameApi.Db.Repository.Implementation
                     ["followersCount"] = FieldValue.Increment(1),
                     ["updatedAt"] = now
                 });
+            });
+        }
+
+        public async Task UnfollowAsync(string followerId, string followedId)
+        {
+            var db = Collection.Database;
+            var followRef = db.Collection("follows").Document($"{followerId}_{followedId}");
+            var followerRef = Collection.Document(followerId);
+            var followedRef = Collection.Document(followedId);
+            var now = Timestamp.GetCurrentTimestamp();
+
+            await db.RunTransactionAsync(async tx =>
+            {
+                var snap = await tx.GetSnapshotAsync(followRef);
+                if (snap.Exists)
+                {
+                    tx.Delete(followRef);
+
+                    tx.Update(followerRef, new Dictionary<string, object>
+                    {
+                        ["followingCount"] = FieldValue.Increment(-1),
+                        ["updatedAt"] = now
+                    });
+                    tx.Update(followedRef, new Dictionary<string, object>
+                    {
+                        ["followersCount"] = FieldValue.Increment(-1),
+                        ["updatedAt"] = now
+                    });
+                }
+                else
+                    throw new InvalidOperationException("ALREADY_FOLLOWING: no follow find.");
             });
         }
     }
