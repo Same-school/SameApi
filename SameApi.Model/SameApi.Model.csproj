@@ -7,6 +7,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="LKP\**" />
+    <EmbeddedResource Remove="LKP\**" />
+    <None Remove="LKP\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\SameApi.Data\SameApi.Data.csproj" />
   </ItemGroup>
 

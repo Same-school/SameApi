@@ -9,15 +9,11 @@ namespace SameApi.Data.Repository
     {
         TContext _context { get; }
 
-        Task<IEnumerable<TModelDao>> GetAllAsync(bool withNoTracking = true);
-        Task<TModelDao?> GetByIdAsync(int id, bool withNoTracking = true);
-
-        Task AddAndSaveAsync(TModelDao entity);
+        Task<IEnumerable<TModelDao>> GetAllAsync();
+        Task<TModelDao?> GetByIdAsync(string id);
+        Task AddAsync(TModelDao entity);
         Task UpdateAsync(TModelDao entity);
         Task RemoveAsync(TModelDao entity);
-        Task RemoveByIdAsync(int id, bool withNoTracking = true);
-
-
-        /* all the task for crud*/
+        Task RemoveByIdAsync(string id);
     }
 }

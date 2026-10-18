@@ -1,36 +1,34 @@
 ﻿using MediatR;
 using SameApi.Db.UnitOfWork;
-using SameApi.Dto;
+using System.Text.Json.Serialization;
 
 namespace SameApi.Business.User.Command
 {
-    public class FollowUserCommand : InteractionModel, IRequest<int>
+    public class FollowUserCommand : IRequest
     {
-
+        [JsonIgnore]
+        public string CurrentUserId { get; set; } = "";
+        public string FollowUserId { get; set; } = "";
     }
-    public class FollowUserCommandHandler : IRequestHandler<FollowUserCommand, int>
+    public class FollowUserCommandHandler : IRequestHandler<FollowUserCommand>
     {
-        private IApiSameUnitOfWork _uow { get; }
-        public FollowUserCommandHandler(IApiSameUnitOfWork uow)
+        private readonly IApiSameUnitOfWork _uow;
+
+        public FollowUserCommandHandler(IApiSameUnitOfWork unitOfWork)
         {
-            _uow = uow;
+            _uow = unitOfWork;
         }
-
-        public async Task<int> Handle(FollowUserCommand command, CancellationToken cancellationToken)
+        public async Task Handle(FollowUserCommand request, CancellationToken cancellationToken)
         {
+            if (request.CurrentUserId == request.FollowUserId)
+                throw new InvalidOperationException("INVALID_FOLLOW: Impossible to follow himself.");
 
-            if (!command.TargetId.HasValue)
-                throw new ArgumentNullException(nameof(command.TargetId));
+            _ = await _uow.UserRepository.GetByIdAsync(request.CurrentUserId)
+                ?? throw new InvalidOperationException("USER_NOT_FOUND: Actual User not found.");
+            _ = await _uow.UserRepository.GetByIdAsync(request.FollowUserId)
+                ?? throw new InvalidOperationException("USER_NOT_FOUND: Follow User not found.");
 
-            var user = await _uow.UserRepository.GetByIdAsync(command.TargetId.Value, withNoTracking: false);
-
-            if (user == null)
-                throw new Exception("User is null");
-
-            user.NumberFollowers++;
-
-            await _uow.SaveChangesAsync();
-            return user.NumberFollowers;
+            await _uow.UserRepository.FollowAsync(request.CurrentUserId, request.FollowUserId);
         }
     }
 }
