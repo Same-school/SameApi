@@ -2,7 +2,7 @@
 using Google.Cloud.Firestore;
 using MediatR;
 using SameApi.Db.UnitOfWork;
-using SameApi.Dto;
+using SameApi.Dto.User;
 
 namespace SameApi.Business.User.Command
 {

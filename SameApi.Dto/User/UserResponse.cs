@@ -1,4 +1,4 @@
-﻿namespace SameApi.Dto
+﻿namespace SameApi.Dto.User
 {
     public class UserResponse
     {

@@ -7,6 +7,8 @@ namespace SameApi.Db.UnitOfWork
     {
         IApiSameDbContext Context { get; }
         IUserRepository UserRepository { get; }
+        IPostRepository PostRepository { get; }
+        ICommentRepository CommentRepository { get; }
         //Task<int> SaveChangesAsync();
         
     }

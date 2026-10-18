@@ -2,7 +2,7 @@
 using Google.Cloud.Firestore;
 using MediatR;
 using SameApi.Db.UnitOfWork;
-using SameApi.Dto;
+using SameApi.Dto.User;
 using SameApi.Model;
 using System.Text.Json.Serialization;
 

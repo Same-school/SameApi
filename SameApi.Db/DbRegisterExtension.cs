@@ -4,7 +4,6 @@ using SameApi.Db.DbContexts;
 using SameApi.Db.Repository;
 using SameApi.Db.Repository.Implementation;
 using SameApi.Db.UnitOfWork;
-using static Google.Cloud.Firestore.V1.StructuredQuery.Types;
 
 namespace SameApi.Db
 {
@@ -16,9 +15,12 @@ namespace SameApi.Db
             services.AddScoped<IApiSameDbContext, SameApiDbContext>();
 
             services.AddScoped<IUserRepository, UserRepository>();
+            services.AddScoped<IPostRepository, PostRepository>();
+            services.AddScoped<ICommentRepository, CommentRepository>();
 
             services.AddScoped<IApiSameUnitOfWork, SameApiUnitOfWork>();
         }
+
         public static void RegisterFireStore(this IServiceCollection services, string projectId, string databaseId)
         {
             services.AddSingleton(_ => new FirestoreDbBuilder
@@ -27,6 +29,8 @@ namespace SameApi.Db
                 DatabaseId = databaseId
             }.Build());
         }
+
+        #region seed
         public static async Task SeedGendersAsync(FirestoreDb db)
         {
             var batch = db.StartBatch();
@@ -42,7 +46,6 @@ namespace SameApi.Db
                 batch.Set(db.Collection("schools").Document(id), data);
             await batch.CommitAsync();
         }
-        #region seed
         private static readonly Dictionary<string, Dictionary<string, object>> Genders = new()
         {
             ["male"] = new() { ["label"] = "Homme", ["order"] = 1 },
@@ -97,6 +100,5 @@ namespace SameApi.Db
             ["cfp-cfpshr"] = new() { ["label"] = "CFPSHR (services, hôtellerie, restauration)", ["type"] = "cfp" },
         };
         #endregion
-
     }
 }
