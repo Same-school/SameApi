@@ -1,7 +1,8 @@
 ﻿using AutoMapper;
-using SameApi.Dto;
+using SameApi.Dto.Comment;
+using SameApi.Dto.Post;
+using SameApi.Dto.User;
 using SameApi.Model;
-using SameApi.Model.LKP;
 
 namespace SameApi.Business
 {
@@ -9,42 +10,23 @@ namespace SameApi.Business
     {
         public SameApiProfile()
         {
-
             //User
-            CreateMap<UserInput, UserDao>()
-                .ForMember(dest => dest.GenderDao, opt => opt.Ignore())
-                .ForMember(dest => dest.SchoolDao, opt => opt.Ignore())
-                .ForMember(dest => dest.ProfessionDao, opt => opt.Ignore()); CreateMap<UserDao, UserResponse>();
+            CreateMap<UserInput, UserDao>();
             CreateMap<UserDao, UserResponse>()
                 .ForMember(
-                    dest => dest.Gender,
-                    opt => opt.MapFrom(src => src.GenderDao)
-                )
-                .ForMember(
-                dest => dest.School,
-                opt => opt.MapFrom(src => src.SchoolDao)
+                    dest => dest.CreatedAt,
+                    opt => opt.MapFrom(src => src.CreatedAt.ToDateTime())
                 );
 
-            //Gender
-            CreateMap<GenderInput, LKP_GenderDao>();
-            CreateMap<LKP_GenderDao, GenderResponse>();
-
-            //Profession
-            CreateMap<ProfessionInput, LKP_ProfessionDao>();
-            CreateMap<LKP_ProfessionDao, ProfessionResponse>();
-
-            //School
-            CreateMap<Schoolnput, LKP_SchoolDao>();
-            CreateMap<LKP_SchoolDao, SchoolResponse>();
-
-            //Post
             CreateMap<PostInput, PostDao>();
-            CreateMap<PostDao,PostResponse>();
+            CreateMap<PostDao, PostResponse>()
+                .ForMember(
+                    dest => dest.CreatedAt,
+                    opt => opt.MapFrom(src => src.CreatedAt.ToDateTime())
+                );
 
-            //Comment
+
             CreateMap<CommentInput, CommentDao>();
-            CreateMap<CommentDao, CommentResponse>();
-
 
         }
     }

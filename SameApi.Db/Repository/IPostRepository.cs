@@ -6,6 +6,6 @@ namespace SameApi.Db.Repository
 {
     public interface IPostRepository : IBaseRepository<IApiSameDbContext, PostDao>
     {
-        Task<IEnumerable<PostDao>> GetPostByUserIdAsync(int userId, bool withNoTracking = true);
+        Task CreateAsync(PostDao post);
     }
 }

@@ -4,11 +4,11 @@ using SameApi.Db.UnitOfWork;
 
 namespace SameApi.Business.User.Command
 {
-    public class DeleteUserCommand : IRequest<int>
+    public class DeleteUserCommand : IRequest<string>
     {
-        public int Id { get; set; }
+        public string Id { get; set; }
     }
-    public class DeleteUserCommandHandler : IRequestHandler<DeleteUserCommand, int>
+    public class DeleteUserCommandHandler : IRequestHandler<DeleteUserCommand, string>
     {
         private readonly IMapper _mapper;
         private readonly IApiSameUnitOfWork _iuow;
@@ -19,9 +19,8 @@ namespace SameApi.Business.User.Command
             _iuow = iuow;
         }
 
-        public async Task<int> Handle(DeleteUserCommand command, CancellationToken cancellationToken)
+        public async Task<string> Handle(DeleteUserCommand command, CancellationToken cancellationToken)
         {
-
             await _iuow.UserRepository.RemoveByIdAsync(command.Id);
 
             return command.Id;

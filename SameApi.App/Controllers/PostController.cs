@@ -1,14 +1,14 @@
 ﻿using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SameApi.Business.Post.Command;
 using SameApi.Business.Post.Query;
-using SameApi.Business.User.Command;
-using SameApi.Dto;
 
 namespace SameApi.App.Controllers
 {
     [ApiController]
     [Route("api/post")]
+    [Authorize]
     public class PostController : ControllerBase
     {
         private readonly IMediator _mediator;
@@ -18,47 +18,22 @@ namespace SameApi.App.Controllers
             _mediator = mediator;
         }
 
-        [HttpGet("get/{id}")]
-        public async Task<ActionResult<PostResponse?>> GetPostByIdAsync(int id)
-        {
-            var result = await _mediator.Send(new GetPostByIdQuery { Id = id });
-
-            return Ok(result);
-        }
-
-        [HttpGet("getallbyuser/{userId}")]
-        public async Task<ActionResult<PostResponse?>> GetAllPostByUserIdAsync(int userId)
-        {
-            var result = await _mediator.Send(new GetAllCommentByIdPostQuery { UserId = userId });
-
-            return Ok(result);
-        }
-
         [HttpPost("create")]
-        public async Task<IActionResult> CreatePostAsync([FromBody] CreatePostCommand command)
+        public async Task<IActionResult> CreatePostAsync([FromBody] CreatePostCommand command, CancellationToken ct)
         {
-            await _mediator.Send(command);
-            return Ok();
-        }
+            var uid = User.FindFirst("user_id")?.Value;
+            if (uid is null) return Unauthorized();
 
-        [HttpPut("update")]
-        public async Task<IActionResult> UpdatePostAsync([FromBody] UpdatePostCommand command)
-        {
-            var result = await _mediator.Send(command);
-            return Ok(result);
-        }
-
-        [HttpDelete("delete/{id}")]
-        public async Task<IActionResult> DeletePostAsync(int id)
-        {
-            await _mediator.Send(new DeletePostCommand { Id = id });
+            command.Uid = uid;
+            await _mediator.Send(command, ct);
             return Ok();
         }
-        [HttpPost("addALike/{id}")]
-        public async Task<IActionResult> AddALikeAsync(int id)
+        [AllowAnonymous]
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetById(string id, CancellationToken ct)
         {
-            await _mediator.Send(new AddALikePostCommand { TargetId = id });
-            return Ok();
+            var post = await _mediator.Send(new GetPostByIdQuery { Id = id }, ct);
+            return post is null ? NotFound() : Ok(post);
         }
     }
 }

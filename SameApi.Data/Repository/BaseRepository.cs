@@ -1,61 +1,43 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Google.Cloud.Firestore;
 using SameApi.Data.DbContexts;
 using SameApi.Data.Model;
 
 namespace SameApi.Data.Repository
 {
-    public class BaseRepository<TContext, TModelDao> : IBaseRepository<TContext, TModelDao>
+    public abstract class BaseRepository<TContext, TModelDao> : IBaseRepository<TContext, TModelDao>
         where TModelDao : class, IModelDao
         where TContext : IBaseDbContext
     {
         public TContext _context { get; }
+        protected abstract string CollectionName { get; }
+        protected CollectionReference Collection => _context.Db.Collection(CollectionName);
 
-        public BaseRepository(TContext context)
+        protected BaseRepository(TContext context) => _context = context;
+
+        public virtual async Task<IEnumerable<TModelDao>> GetAllAsync()
         {
-            _context = context;
+            var snap = await Collection.GetSnapshotAsync();
+            return snap.Documents.Select(d => d.ConvertTo<TModelDao>()).ToList();
         }
 
-        public virtual async Task<IEnumerable<TModelDao>> GetAllAsync(bool withNoTracking = true)
+        public virtual async Task<TModelDao?> GetByIdAsync(string id)
         {
-            IQueryable<TModelDao> query = _context.Set<TModelDao>();
-
-            if (withNoTracking)
-                query = query.AsNoTracking();
-
-            return await query.ToListAsync();
+            var snap = await Collection.Document(id).GetSnapshotAsync();
+            return snap.Exists ? snap.ConvertTo<TModelDao>() : null;
         }
 
-        public async Task AddAndSaveAsync(TModelDao entity)
+        public virtual async Task AddAsync(TModelDao entity)
         {
-            await _context.Set<TModelDao>().AddAsync(entity);
-            await _context.SaveChangesAsync();
+            var doc = await Collection.AddAsync(entity);
+            entity.Id = doc.Id;
         }
 
-        public virtual async Task<TModelDao?> GetByIdAsync(int id, bool withNoTracking = false)
-        {
-            IQueryable<TModelDao> query = _context.Set<TModelDao>();
+        public virtual Task UpdateAsync(TModelDao entity) =>
+            Collection.Document(entity.Id).SetAsync(entity, SetOptions.MergeAll);
 
-            if (withNoTracking) 
-                query = query.AsNoTracking();
+        public virtual Task RemoveAsync(TModelDao entity) => RemoveByIdAsync(entity.Id);
 
-            return await query.FirstOrDefaultAsync(x => x.Id == id);
-        }
-
-        public async Task RemoveByIdAsync(int id, bool withNoTracking = true)
-        {
-            var entity = await _context.Set<TModelDao>().FindAsync(id);
-            if (entity != null)
-               await RemoveAsync(entity);
-        }
-        public async Task RemoveAsync(TModelDao entity)
-        {
-            _context.Set<TModelDao>().Remove(entity);
-            await _context.SaveChangesAsync();
-        }
-        public async Task UpdateAsync(TModelDao entity)
-        {
-            _context.Set<TModelDao>().Update(entity);
-            await _context.SaveChangesAsync();
-        }
+        public virtual Task RemoveByIdAsync(string id) =>
+            Collection.Document(id).DeleteAsync();
     }
 }

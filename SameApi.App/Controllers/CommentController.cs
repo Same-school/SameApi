@@ -1,13 +1,13 @@
 ﻿using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SameApi.Business.comment.Command;
-using SameApi.Business.Post.Command;
-using SameApi.Business.User.Command;
+using SameApi.Business.Comment.Command;
 
 namespace SameApi.App.Controllers
 {
     [ApiController]
     [Route("api/comment")]
+    [Authorize]
     public class CommentController : ControllerBase
     {
         private readonly IMediator _mediator;
@@ -17,47 +17,14 @@ namespace SameApi.App.Controllers
             _mediator = mediator;
         }
 
-        //[HttpGet("get/{id}")]
-        //public async Task<ActionResult<PostResponse?>> GetPostByIdAsync(int id)
-        //{
-        //    var result = await _mediator.Send(new GetPostByIdQuery { Id = id });
-
-        //    return Ok(result);
-        //}
-
-        //[HttpGet("getallbyuser/{userId}")]
-        //public async Task<ActionResult<PostResponse?>> GetAllPostByUserIdAsync(int userId)
-        //{
-        //    var result = await _mediator.Send(new GetAllPostByIdUserQuery { UserId = userId });
-
-        //    return Ok(result);
-        //}
-
         [HttpPost("create")]
-        public async Task<IActionResult> CreateCommentAsync([FromBody] CreateCommentCommand command)
+        public async Task<IActionResult> CreateCommentAsync([FromBody] CreateCommentCommand command, CancellationToken ct)
         {
-            await _mediator.Send(command);
-            return Ok();
-        }
+            var uid = User.FindFirst("user_id")?.Value;
+            if (uid is null) return Unauthorized();
 
-        [HttpPut("update")]
-        public async Task<IActionResult> UpdateCommentAsync([FromBody] UpdateCommentCommand command)
-        {
-            var result = await _mediator.Send(command);
-            return Ok(result);
-        }
-
-        [HttpDelete("delete/{id}")]
-        public async Task<IActionResult> DeleteCommentAsync(int id)
-        {
-            await _mediator.Send(new DeleteCommentCommand { Id = id });
-            return Ok();
-        }
-
-        [HttpPost("addALike/{id}")]
-        public async Task<IActionResult> AddALikeAsync(int id)
-        {
-            await _mediator.Send(new AddALikeCommentCommand { TargetId = id });
+            command.Uid = uid;
+            await _mediator.Send(command, ct);
             return Ok();
         }
     }

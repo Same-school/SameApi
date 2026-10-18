@@ -70,3 +70,5 @@ artifacts/
 
 # Others
 *.cache
+
+*-firebase-adminsdk-*.json
