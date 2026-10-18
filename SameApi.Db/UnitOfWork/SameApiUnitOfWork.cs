@@ -8,19 +8,22 @@ namespace SameApi.Db.UnitOfWork
         public IApiSameDbContext Context  { get; }
         public IUserRepository UserRepository { get; }
 
+        public IPostRepository PostRepository { get; }
+
+        public ICommentRepository CommentRepository { get; }
+
         public SameApiUnitOfWork(
             IApiSameDbContext context,
-            IUserRepository repository)
+            IUserRepository userRepository,
+            IPostRepository postRepository,
+            ICommentRepository commentRepository)
         {
             Context = context;
-            UserRepository = repository;
+            UserRepository = userRepository;
+            PostRepository = postRepository;
+            CommentRepository = commentRepository;
 
         }
-
-        //public async Task<int> SaveChangesAsync()
-        //{
-        //    return await Context.Db.();
-        //}
 
     }
 }

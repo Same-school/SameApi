@@ -1,5 +1,7 @@
 ﻿using AutoMapper;
-using SameApi.Dto;
+using SameApi.Dto.Comment;
+using SameApi.Dto.Post;
+using SameApi.Dto.User;
 using SameApi.Model;
 
 namespace SameApi.Business
@@ -15,6 +17,17 @@ namespace SameApi.Business
                     dest => dest.CreatedAt,
                     opt => opt.MapFrom(src => src.CreatedAt.ToDateTime())
                 );
+
+            CreateMap<PostInput, PostDao>();
+            CreateMap<PostDao, PostResponse>()
+                .ForMember(
+                    dest => dest.CreatedAt,
+                    opt => opt.MapFrom(src => src.CreatedAt.ToDateTime())
+                );
+
+
+            CreateMap<CommentInput, CommentDao>();
+
         }
     }
 }
