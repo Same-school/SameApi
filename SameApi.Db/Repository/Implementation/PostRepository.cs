@@ -1,4 +1,5 @@
 ﻿using Google.Cloud.Firestore;
+using SameApi.Data.Model;
 using SameApi.Data.Repository;
 using SameApi.Db.DbContexts;
 using SameApi.Model;
@@ -32,6 +33,11 @@ namespace SameApi.Db.Repository.Implementation
                 return Task.CompletedTask;
             });
             post.Id = postRef.Id;
+        }
+        public virtual async Task<List<PostDao>> GetByUserIdAsync(string userId)
+        {
+            var snap = await Collection.WhereEqualTo("authorId", userId).GetSnapshotAsync();
+            return snap.Documents.Select(d => d.ConvertTo<PostDao>()).ToList();
         }
     }
 }

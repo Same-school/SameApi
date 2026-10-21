@@ -7,5 +7,6 @@ namespace SameApi.Db.Repository
     public interface IPostRepository : IBaseRepository<IApiSameDbContext, PostDao>
     {
         Task CreateAsync(PostDao post);
+        Task<List<PostDao>> GetByUserIdAsync(string userId);
     }
 }
