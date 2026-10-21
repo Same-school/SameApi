@@ -26,6 +26,7 @@ namespace SameApi.Business.Post.Query
         public async Task<List<PostResponse?>> Handle(GetPostByUserIdQuery request, CancellationToken cancellationToken)
         {
             var result = await _uow.PostRepository.GetByUserIdAsync(request.UserId);
+            result = result.Where(x => x.IsDeleted == false).ToList();
 
             return _mapper.Map<List<PostResponse?>>(result);
         }
