@@ -35,5 +35,19 @@ namespace SameApi.App.Controllers
             var post = await _mediator.Send(new GetPostByIdQuery { Id = id }, ct);
             return post is null ? NotFound() : Ok(post);
         }
+
+        [HttpGet("user/{userId}")]
+        public async Task<IActionResult> GetByUserId(string userId, CancellationToken ct)
+        {
+            var post = await _mediator.Send(new GetPostByUserIdQuery { UserId = userId }, ct);
+            return post is null ? NotFound() : Ok(post);
+        }
+
+        [HttpPatch("delete")]
+        public async Task<IActionResult> DeletePost([FromBody] DeletePostCommand command, CancellationToken ct)
+        {
+            await _mediator.Send(command, ct);
+            return Ok();
+        }
     }
 }
